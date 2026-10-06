@@ -1,0 +1,739 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>🌾 Crop Disease Prediction | CropSpectra</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Poppins', sans-serif; }
+
+    body, html {
+      min-height: 100%;
+      overflow-x: hidden;
+      color: white;
+      margin: 0;
+      background: radial-gradient(circle at 50% 50%, #1b2735, #090a0f);
+    }
+
+    /* === 3D Particle Background === */
+    #particles-js {
+      position: fixed;
+      width: 100%;
+      height: 100%;
+      z-index: 0;
+      top: 0;
+      left: 0;
+    }
+
+    /* NAVBAR */
+    nav {
+      width: 100%;
+      padding: 15px 50px;
+      position: fixed;
+      top: 0;
+      left: 0;
+      background: rgba(0, 0, 0, 0.4);
+      -webkit-backdrop-filter: blur(10px);
+      backdrop-filter: blur(10px);
+      box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+      z-index: 10;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    nav h1 { font-size: 26px; color: #00ffa1; font-weight: 700; }
+    nav ul {
+      list-style: none;
+      display: flex;
+      gap: 25px;
+    }
+    nav ul li a {
+      text-decoration: none;
+      color: white;
+      font-weight: 500;
+      transition: color 0.3s;
+    }
+    nav ul li a:hover { color: #00ffa1; }
+
+    /* CONTAINER */
+    .container {
+      position: relative;
+      z-index: 2;
+      max-width: 800px;
+      width: 90%;
+      background: rgba(255, 255, 255, 0.08);
+      border-radius: 24px;
+      padding: 40px;
+      -webkit-backdrop-filter: blur(14px);
+      backdrop-filter: blur(14px);
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.35);
+      text-align: center;
+      margin: 120px auto 60px auto;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      transition: all 0.4s ease;
+    }
+
+    h1 { font-size: 32px; font-weight: 700; margin-bottom: 12px; color: #fff; }
+    
+    .crop-badges {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 25px;
+    }
+    .crop-pill {
+      background: rgba(0, 255, 161, 0.12);
+      border: 1px solid rgba(0, 255, 161, 0.4);
+      color: #00ffa1;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 500;
+    }
+
+    .upload-card {
+      background: rgba(0, 0, 0, 0.25);
+      border: 2px dashed rgba(0, 255, 161, 0.4);
+      border-radius: 16px;
+      padding: 30px 20px;
+      margin-bottom: 20px;
+      transition: border-color 0.3s;
+    }
+    .upload-card:hover {
+      border-color: #00ffa1;
+    }
+
+    .upload-card p {
+      margin-bottom: 15px;
+      color: #e0e0e0;
+      font-weight: 600;
+      font-size: 16px;
+    }
+
+    input[type="file"] {
+      margin: 10px 0 20px 0;
+      background: rgba(255, 255, 255, 0.9);
+      color: #333;
+      padding: 10px 14px;
+      border-radius: 10px;
+      width: 100%;
+      max-width: 450px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+
+    button[type="submit"] {
+      background: linear-gradient(135deg, #00b09b, #96c93d);
+      color: white;
+      padding: 12px 35px;
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      font-size: 17px;
+      font-weight: 600;
+      transition: transform 0.2s, box-shadow 0.2s;
+      box-shadow: 0 4px 15px rgba(0, 176, 155, 0.4);
+    }
+    button[type="submit"]:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(0, 176, 155, 0.6);
+    }
+
+    .image-preview { margin: 25px 0 15px 0; }
+    .image-preview img {
+      width: 260px;
+      max-height: 260px;
+      object-fit: cover;
+      border-radius: 16px;
+      border: 3px solid rgba(255,255,255,0.3);
+      box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+    }
+
+    /* RESULT CARD */
+    .result {
+      margin-top: 25px;
+      text-align: left;
+      color: #fff;
+      line-height: 1.7;
+      background: rgba(0, 0, 0, 0.35);
+      border-radius: 16px;
+      padding: 25px 30px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .result-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 20px;
+      padding-bottom: 15px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .result h2 {
+      color: #ffe600;
+      font-size: 24px;
+      margin: 0;
+      text-shadow: 0 0 10px rgba(255, 230, 0, 0.2);
+    }
+
+    .confidence-badge {
+      background: rgba(0, 255, 161, 0.2);
+      border: 1px solid #00ffa1;
+      color: #00ffa1;
+      padding: 5px 12px;
+      border-radius: 12px;
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    /* Warning card for Disease Not Found */
+    .not-found-banner {
+      background: rgba(255, 75, 43, 0.15);
+      border: 1px solid rgba(255, 75, 43, 0.5);
+      border-radius: 14px;
+      padding: 16px 20px;
+      margin-bottom: 18px;
+      color: #ff9f8a;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 15px;
+    }
+
+    .result p {
+      margin-bottom: 12px;
+      font-size: 15px;
+      color: #e6e6e6;
+    }
+    .result p strong {
+      color: #00ffa1;
+      display: inline-block;
+      min-width: 110px;
+    }
+    .result ul {
+      margin: 5px 0 15px 30px;
+      list-style-type: disc;
+      color: #e0e0e0;
+    }
+    .result ul li {
+      margin-bottom: 5px;
+    }
+
+    /* BUTTONS */
+    .btn {
+      display: inline-block;
+      padding: 10px 22px;
+      border-radius: 10px;
+      font-weight: 600;
+      text-decoration: none;
+      margin: 8px;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+    .back-btn { background: #444; color: white; }
+    .back-btn:hover { background: #222; }
+    .logout { background: #ff4b2b; color: white; }
+    .logout:hover { background: #d9361f; }
+
+    /* SPEAK BUTTON */
+    .speak-btn {
+      background: linear-gradient(45deg, #667eea, #764ba2);
+      color: white;
+      padding: 12px 28px;
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      font-size: 15px;
+      font-weight: 600;
+      transition: 0.3s;
+      box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+    }
+    .speak-btn:hover {
+      transform: scale(1.04);
+      box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+    }
+    .speak-btn:disabled {
+      background: #666;
+      cursor: not-allowed;
+      transform: scale(1);
+    }
+
+    /* MULTI-LANGUAGE SECTION */
+    .multi-lang-section {
+      margin-top: 30px;
+      padding: 25px;
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 18px;
+      border: 1px solid rgba(0, 255, 161, 0.3);
+    }
+
+    .multi-lang-section h2 {
+      color: #00ffa1;
+      text-align: center;
+      margin-bottom: 18px;
+      font-size: 22px;
+    }
+
+    .lang-selector {
+      text-align: center;
+      margin-bottom: 20px;
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .lang-selector select {
+      padding: 11px 18px;
+      font-size: 15px;
+      border-radius: 10px;
+      border: 1px solid rgba(0, 255, 161, 0.4);
+      background: rgba(27, 39, 53, 0.9);
+      color: white;
+      cursor: pointer;
+      font-weight: 500;
+      outline: none;
+    }
+
+    .translate-btn {
+      background: linear-gradient(45deg, #00b09b, #96c93d);
+      color: white;
+      padding: 11px 26px;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      font-size: 15px;
+      font-weight: 600;
+      transition: 0.3s;
+    }
+    .translate-btn:hover {
+      transform: scale(1.04);
+      box-shadow: 0 6px 20px rgba(0, 176, 155, 0.6);
+    }
+    .translate-btn:disabled {
+      background: #666;
+      cursor: not-allowed;
+    }
+
+    .translated-content {
+      display: none;
+      margin-top: 20px;
+      text-align: left;
+      padding: 22px;
+      background: rgba(0, 0, 0, 0.4);
+      border-radius: 14px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    .translated-content.show {
+      display: block;
+      animation: fadeIn 0.4s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* BUTTON CONTAINER */
+    .button-group { text-align: center; margin-top: 25px; }
+
+    /* FOOTER */
+    .footer {
+      text-align: center;
+      padding: 20px 0;
+      background: rgba(0,0,0,0.5);
+      color: rgba(255,255,255,0.7);
+      margin-top: 40px;
+      font-size: 14px;
+    }
+  </style>
+</head>
+<body>
+  <!-- Particle Background -->
+  <div id="particles-js"></div>
+
+  <!-- NAVBAR -->
+  <nav>
+    <h1>🌿 CropSpectra</h1>
+    <ul>
+      <li><a href="{{ url_for('home') }}">Home</a></li>
+      <li><a href="{{ url_for('about') }}">About</a></li>
+      <li><a href="{{ url_for('blogs') }}">Blogs</a></li>
+      <li><a href="{{ url_for('contact') }}">Contact</a></li>
+      <li><a href="{{ url_for('predict_page') }}" style="color: #00ffa1;">Predict</a></li>
+      {% if user %}
+        <li><a href="{{ url_for('logout') }}" style="color: #ff9f8a;">Logout ({{ user }})</a></li>
+      {% else %}
+        <li><a href="{{ url_for('login') }}">Login</a></li>
+      {% endif %}
+    </ul>
+  </nav>
+
+  <div class="container">
+    <h1>🌾 AI Crop Disease Prediction</h1>
+    
+    <div class="crop-badges">
+      <span class="crop-pill">🍅 Tomato</span>
+      <span class="crop-pill">🥔 Potato</span>
+      <span class="crop-pill">🫑 Bell Pepper</span>
+      <span class="crop-pill">🌽 Maize (Corn)</span>
+      <span class="crop-pill">🌾 Rice</span>
+      <span class="crop-pill">🌾 Wheat</span>
+    </div>
+
+    <form method="POST" enctype="multipart/form-data" class="upload-card">
+      <p>Upload a clear photo of the crop leaf to detect disease</p>
+      <input type="file" name="file" accept="image/*" required>
+      <br>
+      <button type="submit">🔍 Analyze & Predict</button>
+    </form>
+
+    {% if prediction %}
+      <div class="image-preview">
+        <img src="{{ img_path }}" alt="Uploaded Crop Image">
+      </div>
+
+      <div class="result">
+        <div class="result-header">
+          <h2>{{ prediction }}</h2>
+          {% if confidence and confidence != "0%" %}
+            <span class="confidence-badge">Confidence: {{ confidence }}</span>
+          {% endif %}
+        </div>
+
+        {% if raw_prediction in ["Disease not found", "Not a valid crop image"] or prediction == "Disease Not Found" %}
+          <div class="not-found-banner">
+            <span style="font-size: 24px;">⚠️</span>
+            <div>
+              <strong>Disease Not Found</strong>: The image does not match any recognized disease from our trained crop classes. Please ensure you upload a clear photo of an infected leaf.
+            </div>
+          </div>
+        {% endif %}
+
+        <p><strong>Description:</strong> {{ description }}</p>
+
+        {% if symptoms and symptoms|length > 0 %}
+          <p><strong>Symptoms:</strong></p>
+          <ul>
+            {% for symptom in symptoms %}
+              <li>{{ symptom }}</li>
+            {% endfor %}
+          </ul>
+        {% endif %}
+
+        {% if treatment and treatment != "N/A" %}
+          <p><strong>Treatment:</strong> {{ treatment }}</p>
+        {% endif %}
+
+        {% if prevention and prevention != "N/A" %}
+          <p><strong>Prevention:</strong> {{ prevention }}</p>
+        {% endif %}
+
+        <!-- ✔ SPEAKER BUTTON FOR TEXT-TO-SPEECH -->
+        <div style="text-align: center; margin-top: 20px;">
+          <button id="speakBtn" class="speak-btn" onclick="speakPrediction()">
+            🔊 Speak Details (English)
+          </button>
+          <audio id="audioPlayer" style="display: none;"></audio>
+        </div>
+      </div>
+
+      <!-- ✔ MULTI-LANGUAGE SECTION -->
+      <div class="multi-lang-section">
+        <h2>🌐 Multilingual Advisory Translation</h2>
+        <div class="lang-selector">
+          <select id="languageSelect">
+            <option value="">-- Select Language --</option>
+            <option value="hi">Hindi (हिंदी)</option>
+            <option value="bn">Bengali (বাংলা)</option>
+            <option value="mr">Marathi (मराठी)</option>
+            <option value="bho">Bhojpuri (भोजपुरी)</option>
+          </select>
+          <button class="translate-btn" onclick="translateContent()">Translate</button>
+        </div>
+
+        <div id="translatedContent" class="translated-content">
+          <h2 id="transPrediction" style="color: #ffe600; margin-bottom: 12px;"></h2>
+          <p><strong>Description:</strong> <span id="transDescription"></span></p>
+          <div id="transSymptomsSection" style="display: none;">
+            <p><strong>Symptoms:</strong></p>
+            <ul id="transSymptoms"></ul>
+          </div>
+          <p><strong>Treatment:</strong> <span id="transTreatment"></span></p>
+          <p><strong>Prevention:</strong> <span id="transPrevention"></span></p>
+
+          <!-- ✔ SPEAKER BUTTON FOR TRANSLATED TEXT -->
+          <div style="text-align: center; margin-top: 20px;">
+            <button id="transSpeakBtn" class="speak-btn" onclick="speakTranslated()" style="display: none;">
+              🔊 Speak Translation
+            </button>
+            <audio id="transAudioPlayer" style="display: none;"></audio>
+          </div>
+        </div>
+      </div>
+
+      <script>
+        // Store prediction data for speech
+        const predictionData = {
+          prediction: {{ prediction | tojson }},
+          description: {{ description | tojson }},
+          symptoms: {{ symptoms | tojson }},
+          treatment: {{ treatment | tojson }},
+          prevention: {{ prevention | tojson }}
+        };
+
+        let isPlaying = false;
+        let audioGenerated = false;
+
+        // Store translated data
+        let translatedData = {};
+        let selectedLanguage = "";
+        let isTransPlaying = false;
+        let transAudioGenerated = false;
+
+        function speakPrediction() {
+          const btn = document.getElementById('speakBtn');
+          const audioPlayer = document.getElementById('audioPlayer');
+          
+          if (isPlaying) {
+            audioPlayer.pause();
+            btn.textContent = '🔊 Continue';
+            isPlaying = false;
+            return;
+          }
+
+          if (audioGenerated && audioPlayer.src) {
+            audioPlayer.play();
+            btn.textContent = '⏸ Pause';
+            isPlaying = true;
+            return;
+          }
+
+          btn.disabled = true;
+          btn.textContent = '⏳ Generating Speech...';
+
+          fetch('/text_to_speech', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(predictionData)
+          })
+          .then(response => response.json())
+          .then(data => {
+            if (data.success) {
+              audioPlayer.src = data.audio_url;
+              audioPlayer.play();
+              btn.textContent = '⏸ Pause';
+              btn.disabled = false;
+              isPlaying = true;
+              audioGenerated = true;
+              
+              audioPlayer.onended = () => {
+                btn.textContent = '🔊 Speak Details (English)';
+                isPlaying = false;
+              };
+            } else {
+              alert('Error generating speech: ' + (data.error || 'Unknown error'));
+              btn.disabled = false;
+              btn.textContent = '🔊 Speak Details (English)';
+            }
+          })
+          .catch(error => {
+            console.error('Error:', error);
+            alert('Failed to generate speech');
+            btn.disabled = false;
+            btn.textContent = '🔊 Speak Details (English)';
+          });
+        }
+
+        // Translation function
+        function translateContent() {
+          const langSelect = document.getElementById('languageSelect');
+          selectedLanguage = langSelect.value;
+
+          if (!selectedLanguage) {
+            alert('Please select a language first!');
+            return;
+          }
+
+          const translateBtn = document.querySelector('.translate-btn');
+          translateBtn.disabled = true;
+          translateBtn.textContent = '⏳ Translating...';
+
+          const requestData = {
+            target_lang: selectedLanguage,
+            prediction: predictionData.prediction,
+            description: predictionData.description,
+            symptoms: predictionData.symptoms,
+            treatment: predictionData.treatment,
+            prevention: predictionData.prevention
+          };
+
+          fetch('/translate_text', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(requestData)
+          })
+          .then(response => response.json())
+          .then(data => {
+            if (data.success) {
+              translatedData = data.translated;
+              
+              // Display translated content
+              document.getElementById('transPrediction').textContent = translatedData.prediction;
+              document.getElementById('transDescription').textContent = translatedData.description;
+              document.getElementById('transTreatment').textContent = translatedData.treatment;
+              document.getElementById('transPrevention').textContent = translatedData.prevention;
+
+              // Handle symptoms
+              const symptomsSection = document.getElementById('transSymptomsSection');
+              const symptomsList = document.getElementById('transSymptoms');
+              
+              if (translatedData.symptoms && translatedData.symptoms.length > 0) {
+                symptomsSection.style.display = 'block';
+                symptomsList.innerHTML = '';
+                translatedData.symptoms.forEach(symptom => {
+                  const li = document.createElement('li');
+                  li.textContent = symptom;
+                  symptomsList.appendChild(li);
+                });
+              } else {
+                symptomsSection.style.display = 'none';
+              }
+
+              // Show translated content and speaker button
+              document.getElementById('translatedContent').classList.add('show');
+              document.getElementById('transSpeakBtn').style.display = 'inline-block';
+              
+              // Reset audio state
+              transAudioGenerated = false;
+              isTransPlaying = false;
+              
+              translateBtn.disabled = false;
+              translateBtn.textContent = 'Translate';
+            } else {
+              alert('Translation failed: ' + (data.error || 'Unknown error'));
+              translateBtn.disabled = false;
+              translateBtn.textContent = 'Translate';
+            }
+          })
+          .catch(error => {
+            console.error('Error:', error);
+            alert('Failed to translate content');
+            translateBtn.disabled = false;
+            translateBtn.textContent = 'Translate';
+          });
+        }
+
+        // Speak translated text
+        function speakTranslated() {
+          const btn = document.getElementById('transSpeakBtn');
+          const audioPlayer = document.getElementById('transAudioPlayer');
+
+          if (isTransPlaying) {
+            audioPlayer.pause();
+            btn.textContent = '🔊 Continue';
+            isTransPlaying = false;
+            return;
+          }
+
+          if (transAudioGenerated && audioPlayer.src) {
+            audioPlayer.play();
+            btn.textContent = '⏸ Pause';
+            isTransPlaying = true;
+            return;
+          }
+
+          btn.disabled = true;
+          btn.textContent = '⏳ Generating Speech...';
+
+          const requestData = {
+            target_lang: selectedLanguage,
+            prediction: translatedData.prediction,
+            description: translatedData.description,
+            symptoms: translatedData.symptoms,
+            treatment: translatedData.treatment,
+            prevention: translatedData.prevention
+          };
+
+          fetch('/translated_speech', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(requestData)
+          })
+          .then(response => response.json())
+          .then(data => {
+            if (data.success) {
+              audioPlayer.src = data.audio_url;
+              audioPlayer.play();
+              btn.textContent = '⏸ Pause';
+              btn.disabled = false;
+              isTransPlaying = true;
+              transAudioGenerated = true;
+
+              audioPlayer.onended = () => {
+                btn.textContent = '🔊 Speak Translation';
+                isTransPlaying = false;
+              };
+            } else {
+              alert('Error generating speech: ' + (data.error || 'Unknown error'));
+              btn.disabled = false;
+              btn.textContent = '🔊 Speak Translation';
+            }
+          })
+          .catch(error => {
+            console.error('Error:', error);
+            alert('Failed to generate speech');
+            btn.disabled = false;
+            btn.textContent = '🔊 Speak Translation';
+          });
+        }
+      </script>
+    {% endif %}
+
+    <!-- BUTTONS -->
+    <div class="button-group">
+      <a href="{{ url_for('home') }}" class="btn back-btn">⬅ Back to Home</a>
+      {% if user %}
+        <a href="{{ url_for('logout') }}" class="btn logout">Logout</a>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <footer class="footer">
+    © 2026 CropSpectra | Smart Vision for a Healthier Harvest 🌿
+  </footer>
+
+  <!-- Particles.js -->
+  <script src="https://cdn.jsdelivr.net/npm/particles.js@2.0.0/particles.min.js"></script>
+  <script>
+    particlesJS("particles-js", {
+      "particles": {
+        "number": { "value": 80 },
+        "color": { "value": "#ffffff" },
+        "shape": { "type": "circle" },
+        "opacity": { "value": 0.4 },
+        "size": { "value": 3 },
+        "move": { "speed": 2 }
+      },
+      "interactivity": {
+        "events": {
+          "onhover": { "enable": true, "mode": "repulse" },
+          "onclick": { "enable": true, "mode": "push" }
+        }
+      },
+      "retina_detect": true
+    });
+  </script>
+</body>
+</html>
